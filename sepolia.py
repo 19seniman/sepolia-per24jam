@@ -10,12 +10,14 @@ load_dotenv()
 
 EMAIL = os.getenv("GMAIL_EMAIL")
 PASSWORD = os.getenv("GMAIL_PASSWORD")
+WALLET_ADDRESS = os.getenv("WALLET_ADDRESS")
 
 def claim_faucet():
-    print("Starting faucet claim process...")
+    print("🚀 Starting faucet claim process...")
 
     chrome_options = Options()
-    chrome_options.add_argument("--headless")  # remove this if you want to see the browser
+    # comment out headless to see the browser
+    # chrome_options.add_argument("--headless")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
 
@@ -25,44 +27,54 @@ def claim_faucet():
         driver.get("https://cloud.google.com/application/web3/faucet/ethereum/sepolia")
         time.sleep(5)
 
-        # Click sign in with Google
+        # Click "Sign in with Google"
         google_signin = driver.find_element(By.XPATH, "//button[contains(text(), 'Sign in with Google')]")
         google_signin.click()
         time.sleep(5)
 
-        # Switch to login tab
+        # Switch to login window
         driver.switch_to.window(driver.window_handles[1])
 
-        # Fill email
+        # Fill in email
         email_input = driver.find_element(By.XPATH, '//input[@type="email"]')
         email_input.send_keys(EMAIL)
-        email_input.send_keys(u'\ue007')  # ENTER key
+        email_input.send_keys(u'\ue007')  # Enter
         time.sleep(3)
 
-        # Fill password
+        # Fill in password
         password_input = driver.find_element(By.XPATH, '//input[@type="password"]')
         password_input.send_keys(PASSWORD)
-        password_input.send_keys(u'\ue007')  # ENTER key
+        password_input.send_keys(u'\ue007')  # Enter
         time.sleep(8)
 
-        # Switch back
+        # Switch back to faucet window
         driver.switch_to.window(driver.window_handles[0])
         time.sleep(5)
 
-        # Wait and click on "Request Tokens" or similar
+        # Fill in the wallet address if field is available
+        try:
+            wallet_input = driver.find_element(By.XPATH, '//input[@aria-label="Wallet address"]')
+            wallet_input.clear()
+            wallet_input.send_keys(WALLET_ADDRESS)
+            time.sleep(2)
+        except:
+            print("⚠️ Wallet address input not found or already filled.")
+
+        # Click "Request" button
         claim_button = driver.find_element(By.XPATH, '//button[contains(text(), "Request")]')
         claim_button.click()
-        print("Faucet claimed successfully!")
+        print("✅ Faucet claimed successfully!")
 
     except Exception as e:
-        print(f"Error occurred: {e}")
+        print(f"❌ Error occurred: {e}")
     finally:
+        time.sleep(5)
         driver.quit()
 
-# Schedule to run once every 24 hours
+# Run every 24 hours
 schedule.every(24).hours.do(claim_faucet)
 
-print("Scheduler started. Waiting for next run...")
+print("🕓 Scheduler started. Waiting for the next run...")
 while True:
     schedule.run_pending()
     time.sleep(60)
