@@ -1,5 +1,6 @@
 import time
 import os
+from datetime import datetime, timedelta
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -13,11 +14,14 @@ PASSWORD = os.getenv("GMAIL_PASSWORD")
 WALLET_ADDRESS = os.getenv("WALLET_ADDRESS")
 
 def claim_faucet():
-    print("🚀 Starting faucet claim process...")
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    next_run = (datetime.now() + timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")
+
+    print(f"🚀 Starting faucet claim process at {now}")
+    print(f"🕒 Next run scheduled at {next_run}")
 
     chrome_options = Options()
-    # comment out headless to see the browser
-    # chrome_options.add_argument("--headless")
+    # chrome_options.add_argument("--headless")  # Uncomment for headless mode
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
 
@@ -51,7 +55,7 @@ def claim_faucet():
         driver.switch_to.window(driver.window_handles[0])
         time.sleep(5)
 
-        # Fill in the wallet address if field is available
+        # Fill in the wallet address
         try:
             wallet_input = driver.find_element(By.XPATH, '//input[@aria-label="Wallet address"]')
             wallet_input.clear()
@@ -71,10 +75,12 @@ def claim_faucet():
         time.sleep(5)
         driver.quit()
 
-# Run every 24 hours
+# Schedule job every 24 hours
 schedule.every(24).hours.do(claim_faucet)
 
-print("🕓 Scheduler started. Waiting for the next run...")
+print("🟢 Scheduler started. Waiting for the next run...\n")
+claim_faucet()  # Optional: run first immediately
+
 while True:
     schedule.run_pending()
     time.sleep(60)
